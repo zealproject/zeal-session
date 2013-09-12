@@ -8,14 +8,44 @@ use Zend\Db\Sql\Sql;
 
 class Db implements SaveHandlerInterface
 {
+    /**
+     * Write session if it has data
+     */
     const WRITE_IF_DATA = 1;
+
+    /**
+     * Write session if the data has changed from the original data
+     */
     const WRITE_IF_CHANGED = 2;
+
+    /**
+     * Always write session data
+     */
     const WRITE_ALWAYS = 3;
 
+    /**
+     * Never write session data
+     */
+    const WRITE_NEVER = 4;
+
+    /**
+     * Zend DB adapter
+     *
+     * @var Zend\Db\Adapter\AdapterInterface
+     */
     protected $db;
 
+    /**
+     * The write mode that's in use (defaults to WRITE_IF_DATA)
+     *
+     * @var integer
+     */
     static protected $writeMode = 1;
 
+    /**
+     * The initially loaded session data (used for comparision to new data)
+     * @var array
+     */
     protected $existingSession;
 
 
@@ -119,7 +149,7 @@ class Db implements SaveHandlerInterface
         }
 
         if ($saveSession) {
-            $ip = $_SERVER['REMOTE_ADDR']; // FIXME
+            $ip = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : null; // FIXME
 
             $lifetime = max(3600, ini_get('session.cookie_lifetime'));
             if (!empty($this->existingSession)) {
@@ -219,7 +249,7 @@ class Db implements SaveHandlerInterface
      *
      * @param int $writeMode
      */
-    static public function setWriteMode($writeMode)
+    public static function setWriteMode($writeMode)
     {
         self::$writeMode = $writeMode;
     }
@@ -229,7 +259,7 @@ class Db implements SaveHandlerInterface
      *
      * @return int
      */
-    static public function getWriteMode()
+    public static function getWriteMode()
     {
         return self::$writeMode;
     }
