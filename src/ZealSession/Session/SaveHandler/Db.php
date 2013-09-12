@@ -146,6 +146,10 @@ class Db implements SaveHandlerInterface
             case self::WRITE_IF_CHANGED:
                 $saveSession = ($data != $this->existingSession['data']);
                 break;
+
+            case self::WRITE_NEVER:
+                // do nothing
+                break;
         }
 
         if ($saveSession) {
