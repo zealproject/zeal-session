@@ -101,7 +101,6 @@ class Db implements SaveHandlerInterface
     public function read($id)
     {
         if ($id) {
-
             $result = $this->getDb()->query('SELECT * FROM sessions WHERE sessionID = ?', array($id));
             if ($result) {
                 $this->existingSession = $result->current();
@@ -152,6 +151,21 @@ class Db implements SaveHandlerInterface
                 break;
         }
 
+        // don't save the session data if _REQUEST_ACCESS_TIME (which ZF adds by
+        // defaut) is the only thing in it. Hopefully this won't be required in
+        // ZF 2.3. See also ZF issue #4332
+        if (!empty($data)) {
+            $dataParts = explode('|', $data);
+            if (count($dataParts) == 2) {
+                $realData = unserialize($dataParts[1]);
+                if (is_array($realData) && count($realData) == 1 && isset($realData['_REQUEST_ACCESS_TIME'])) {
+                    if (self::$writeMode == self::WRITE_IF_DATA) {
+                        $saveSession = false;
+                    }
+                }
+            }
+        }
+
         if ($saveSession) {
             $ip = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : null; // FIXME
 
@@ -177,7 +191,6 @@ class Db implements SaveHandlerInterface
                 }
 
                 if ($id == $this->existingSession['sessionID']) {
-
                     $sql = new Sql($this->getDb());
 
                     $update = $sql->update('sessions');
